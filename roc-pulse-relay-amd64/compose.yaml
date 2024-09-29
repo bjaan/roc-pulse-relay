@@ -1,0 +1,10 @@
+services:
+  pulseaudio:
+    build: .
+    image: bjaan/roc-pulse-relay-amd64
+    ports:
+      - 10001:10001/udp
+      - 10002:10002/udp
+      - 10002:10002/udp
+    environment:
+      - PULSE_SERVER=${PULSE_SERVER}
