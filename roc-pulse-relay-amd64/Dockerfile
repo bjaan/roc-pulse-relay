@@ -61,8 +61,7 @@ RUN ldconfig
 # RUN rm -Rf libtool-2.4.7
 # RUN rm -Rf roc-toolkit
 # RUN rm -Rf roc-pulse
-# Setup PulseAudio user
-RUN useradd -ms /bin/bash pulse
+# Setup PulseAudio start up script
 RUN mkdir /run/pulse
 RUN echo "#!/bin/sh" > /run/pulse/launch.sh
 RUN echo "echo \"load-module module-tunnel-sink sink_name=Remote server=\$PULSE_SERVER\" >> /run/pulse/config.pa" >> /run/pulse/launch.sh
