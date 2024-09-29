@@ -48,8 +48,6 @@ RUN cd roc-pulse/build/x86_64-linux-gnu && cmake ../.. \
  -DLIBTOOL_VERSION=2.4.7 \
  -DLIBTOOL_DIR=/libtool-2.4.7
 RUN cd roc-pulse/build/x86_64-linux-gnu && make VERBOSE=1
-RUN cd roc-pulse/build/x86_64-linux-gnu && /usr/bin/cc -fPIC -O3 -DNDEBUG  -pthread -lstdc++ -shared -Wl,-soname,module-roc-sink-input.so -o /roc-pulse/bin/module-roc-sink-input.so "CMakeFiles/module-roc-sink-input.dir/src/module-roc-sink-input.c.o" CMakeFiles/rocpulse_helpers.dir/src/rocpulse_helpers.c.o   -L/roc-toolkit/bin/x86_64-pc-linux-gnu,/usr/local/lib/x86_64-linux-gnu/pulseaudio -Wl,-rpath,/roc-toolkit/bin/x86_64-pc-linux-gnu -lroc -lpulse -L/usr/local/lib/x86_64-linux-gnu/pulseaudio/ -lpulsecore-15.99
-RUN cd roc-pulse/build/x86_64-linux-gnu && /usr/bin/cc -fPIC -O3 -DNDEBUG  -pthread -lstdc++ -shared -Wl,-soname,module-roc-sink.so -o /roc-pulse/bin/module-roc-sink.so "CMakeFiles/module-roc-sink.dir/src/module-roc-sink.c.o" CMakeFiles/rocpulse_helpers.dir/src/rocpulse_helpers.c.o   -L/roc-toolkit/bin/x86_64-pc-linux-gnu  -Wl,-rpath,/roc-toolkit/bin/x86_64-pc-linux-gnu -lroc -lpulse -L/usr/local/lib/x86_64-linux-gnu/pulseaudio/ -lpulsecore-15.99
 RUN cd roc-pulse/build/x86_64-linux-gnu && make install
 # Add ROC input sink to pulseaudio
 RUN cp /usr/local/lib/pulse-15.99.1/modules/module-roc-sink-input.so /usr/local/lib/x86_64-linux-gnu/pulseaudio/modules
