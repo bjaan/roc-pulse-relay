@@ -29,15 +29,15 @@ git clone https://github.com/bjaan/roc-pulse-relay
 ```sh
 cd roc-pulse-relay\roc-pulse-relay-amd64
 ```
-3. run the Docker Compose Build command, this will use both the  _Dockerfile_ and the _compose.yaml_ to build a new Docker Image, called _bjaan/roc-pulse-relay_
+3. run the Docker Compose Build command, this will use both the  _Dockerfile_ and the _compose.yaml_ to build a new Docker Image, called _bjaan/roc-pulse-relay-amd64_
 ```sh
 docker compose build
 ```
-4. run the Docker Compose Build command, this will create a Docker Container based on the _bjaan/roc-pulse-relay_ Docker Image, and start it up
+4. run the Docker Compose Build command, this will create a Docker Container based on the _bjaan/roc-pulse-relay-amd64_ Docker Image, and start it up
 ```sh
 docker compose up -d
 ```
-5. _Roc Toolkit Receiver to PulseAudio relay_ is now running, it can be stopped, restarted now through controlling the new container through Docker.
+5. _Roc Toolkit Receiver to PulseAudio relay_ is now running, it can be stopped, and restarted now through controlling the new container through Docker.
 
 # Testing PulseAudio relaying
 
@@ -72,13 +72,13 @@ roc-send -vv -s rtp+rs8m://127.0.0.1:10001 -r rs8m://127.0.0.1:10002 -i file:Can
 
 TODO
 
-# Running PulseAudio as a Windows service, and use it in WSL 2
+# Running PulseAudio as a Windows service and use it in WSL 2
 
-The built-in _WSLg PulseAudio_ might be unstable or giving glitchy sound, in that case it is recommended to install a proper PulseAudio server on Windows and repoint WSL 2 to that service rather than the built-in WSLg on.
+The built-in _WSLg PulseAudio_ might be unstable or giving glitchy sound, in that case it is recommended to install a proper PulseAudio server on Windows and repoint WSL 2 to that service rather than the built-in WSLg one.
 
-1. Install PulseAudio for Windows: downloaded from here https://pgaskin.net/pulseaudio-win32/ - follow this guide to get it installed as a service: https://www.linuxuprising.com/2021/03/how-to-get-sound-pulseaudio-to-work-on.html
+1. Install PulseAudio for Windows: downloaded from here https://pgaskin.net/pulseaudio-win32 and follow this guide to get it installed as a service: https://www.linuxuprising.com/2021/03/how-to-get-sound-pulseaudio-to-work-on.html
 
-2. modify the _.bashrc_ file that will set the _$PULSE_SERVER_ environment variable, to point to the Windows Service hosting PulseAudio. 
+2. modify the _.bashrc_ file that will set the _$PULSE_SERVER_ environment variable when ever a WSL 2 session is started, to point to the Windows Service hosting PulseAudio. Using e.g. `nano ~/.bashrc` command (_CTRL+O_ to save):
 	1. Comment out this line - in case it exists - to disable WSLg pulse server: `export PULSE_SERVER=unix:/mnt/wslg/runtime-dir/pulse/native`
 	2. Add these lines, this will set the  _$PULSE_SERVER_ variable and ensure that any app needing to connect to PulseAudio for sound will connect to the Windows Service instead:
 ```sh
