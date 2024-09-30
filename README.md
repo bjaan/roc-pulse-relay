@@ -27,7 +27,7 @@ git clone https://github.com/bjaan/roc-pulse-relay
 ```
 2. for the AMD64 architecture (modern PC hardware): change directory in to the AMD64 _Dockerfile_ folder (TODO other architectures)
 ```sh
-cd roc-pulse-relay\roc-pulse-relay-amd64
+cd roc-pulse-relay/roc-pulse-relay-amd64
 ```
 3. run the Docker Compose Build command, this will use both the  _Dockerfile_ and the _compose.yaml_ to build a new Docker Image, called _bjaan/roc-pulse-relay-amd64_
 ```sh
@@ -47,6 +47,7 @@ TODO clearer instructions
 ```sh
 pacat < /dev/urandom
 ```
+Hint: in order to run _pacat_, you might have to install the _pulseaudio-utils_ packages on Ubuntu: through this command _sudo apt-get install pulseaudio-utils_
 Hint: run the following command to figure out where your PulseAudio service is running:
 ```sh
 echo $PULSE_SERVER
@@ -57,7 +58,7 @@ echo $PULSE_SERVER
 pacat < /dev/urandom
 ```
 
-3. From your terminal copy a .wav-file (e.g. https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand60.wav) to the _roc-pulse-relay-amd64_ container, replace the _???_ with its container ID. (You can copy it from the Docker Desktop window, it is right below the container name, e.g. 6982f5560704455c149e8ce16f206ec639c7498ed1abfffb7cea3065da1556e9)
+3. From your terminal copy a .wav-file (e.g. https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand60.wav) to the _roc-pulse-relay-amd64_ container, replace the `???` with its container ID. (You can copy it from the Docker Desktop window, it is right below the container name, e.g. `6982f5560704455c149e8ce16f206ec639c7498ed1abfffb7cea3065da1556e9`)
 
 ```sh
 docker cp CantinaBand60.wav ???:/CantinaBand60.wav
@@ -76,7 +77,13 @@ TODO
 
 The built-in _WSLg PulseAudio_ might be unstable or giving glitchy sound, in that case it is recommended to install a proper PulseAudio server on Windows and repoint WSL 2 to that service rather than the built-in WSLg one.
 
-1. Install PulseAudio for Windows: downloaded from here https://pgaskin.net/pulseaudio-win32 and follow this guide to get it installed as a service: https://www.linuxuprising.com/2021/03/how-to-get-sound-pulseaudio-to-work-on.html
+1. Install PulseAudio for Windows: downloaded the installer from here https://pgaskin.net/pulseaudio-win32 or follow this guide to get it installed as a service through manual steps: https://www.linuxuprising.com/2021/03/how-to-get-sound-pulseaudio-to-work-on.html
+	1. Make sure that the _default.pa_ or _config.pa_ file or what ever default configuration file only has these lines:
+```
+load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;172.16.0.0/12
+load-module module-esound-protocol-tcp auth-ip-acl=127.0.0.1;172.16.0.0/12
+load-module module-waveout sink_name=output source_name=input record=0
+```
 
 2. modify the _.bashrc_ file that will set the _$PULSE_SERVER_ environment variable when ever a WSL 2 session is started, to point to the Windows Service hosting PulseAudio. Using e.g. `nano ~/.bashrc` command (_CTRL+O_ to save):
 	1. Comment out this line - in case it exists - to disable WSLg pulse server: `export PULSE_SERVER=unix:/mnt/wslg/runtime-dir/pulse/native`
