@@ -43,7 +43,7 @@ docker compose up -d
 
 TODO clearer instructions
 
-1. From your terminal test the following command, when you get static on your speakers, all is fine, when you get silence, it means that your PulseAudio is either not working or your audio configuration is not working speakers
+1. From your terminal, test the following command, when you get static on your speakers, all is fine, when you get silence, it means that your PulseAudio is either not working or your audio configuration is not working speakers
 ```sh
 pacat < /dev/urandom
 ```
@@ -78,7 +78,7 @@ TODO
 The built-in _WSLg PulseAudio_ might be unstable or giving glitchy sound, in that case it is recommended to install a proper PulseAudio server on Windows and repoint WSL 2 to that service rather than the built-in WSLg one.
 
 1. Install PulseAudio for Windows: downloaded the installer from here https://pgaskin.net/pulseaudio-win32 or follow this guide to get it installed as a service through manual steps: https://www.linuxuprising.com/2021/03/how-to-get-sound-pulseaudio-to-work-on.html
-	1. Make sure that the _default.pa_ or _config.pa_ file or what ever default configuration file only has these lines:
+Make sure that the _default.pa_ or _config.pa_ file or what ever default configuration file only has these lines:
 ```
 load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;172.16.0.0/12
 load-module module-esound-protocol-tcp auth-ip-acl=127.0.0.1;172.16.0.0/12
@@ -96,6 +96,17 @@ export PULSE_SERVER="tcp:$HOST_IP"
 3. Test
 ```sh
 pacat < /dev/urandom
+```
+
+# Testing Roc Framework
+
+1. Set up receiver
+```sh
+roc-send -vv -s rtp+rs8m://127.0.0.1:10010 -r rs8m://127.0.0.1:10011 -i file:CantinaBand60.wav
+```
+2. Set up sender
+```sh
+roc-recv -vv -s rtp+rs8m://0.0.0.0:10010 -r rs8m://0.0.0.0:10011 -o pulse://@DEFAULT_SINK@
 ```
 
 # Links
