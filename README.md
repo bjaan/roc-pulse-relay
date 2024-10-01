@@ -7,10 +7,14 @@ The Roc Toolkit's Sender will allow you to stream stable CD-quality audio over t
 
 This little Docker container will start a service that will allow you to connect any digital audio source from the Roc Toolkit, this can be as simple as its *roc-send*, that streams an audio file over the network, or a virtual audio device that support the Roc Toolkit real-time audio streaming protocol.
 
-Or, use this service when you've set-up a Virtual Speakers as a Roc Virtual Audio Device in macOS. This can be a real Mac, where you need to play audio through another device, or this can be a macOS running in a VM-host (like in QEMU or VirtualBox) to connect to your speakers over the PulseAudio service that is running on your host device.  
+Or, use this service when you've set-up a Virtual Speakers as a Roc Virtual Audio Device in macOS. This can be a real Mac, where you need to play audio through another device, or this can be a macOS running in a VM-host (like in QEMU or VirtualBox) to connect to your speakers over the PulseAudio service that is running on your host device.
 
 The PulseAudio service can be run on a Raspberry Pi, another Linux, or a Windows PC as a Windows Service, for Roc-Steady Sound!
 
+Basically, all it is doing is running this command in a Docker container that contains its own PulseAudio server that forwards it your PulseAudio server
+```sh
+roc-recv -vv -s rtp+rs8m://0.0.0.0:10001 -r rs8m://0.0.0.0:10002 -c rtcp://0.0.0.0:10003 -o pulse://@DEFAULT_SINK@
+```
 # Installation
 
 These assume that you already have the following things configured on your (host) machine:
@@ -41,7 +45,7 @@ docker compose up -d
 
 # Testing PulseAudio relaying
 
-TODO clearer instructions
+Note: these instructions assume that you are using Docker Desktop.
 
 1. From your terminal, test the following command, when you get static on your speakers, all is fine, when you get silence, it means that your PulseAudio is either not working or your audio configuration is not working speakers
 ```sh
@@ -58,7 +62,7 @@ echo $PULSE_SERVER
 pacat < /dev/urandom
 ```
 
-3. From your terminal copy a .wav-file (e.g. https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand60.wav) to the _roc-pulse-relay-amd64_ container, replace the `???` with its container ID. (You can copy it from the Docker Desktop window, it is right below the container name, e.g. `6982f5560704455c149e8ce16f206ec639c7498ed1abfffb7cea3065da1556e9`)
+3. From your terminal copy a .wav-file (e.g. [CantinaBand60.wav](https://www2.cs.uic.edu/~i101/SoundFiles/CantinaBand60.wav)) to the _roc-pulse-relay-amd64_ container, replace the `???` with its container ID. (You can copy it from the Docker Desktop window, it is right below the container name, e.g. `6982f5560704455c149e8ce16f206ec639c7498ed1abfffb7cea3065da1556e9`)
 
 ```sh
 docker cp CantinaBand60.wav ???:/CantinaBand60.wav
@@ -71,13 +75,33 @@ roc-send -vv -s rtp+rs8m://127.0.0.1:10001 -r rs8m://127.0.0.1:10002 -i file:Can
 ```
 # Installation of the Roc Virtual Audio Device for macOS
 
-TODO
+Follow the installation instructions [here (roc-vad - Installation)](https://github.com/roc-streaming/roc-vad?tab=readme-ov-file#installation)
+
+After installation, you need to set up your Virtual Speakers in macOS:
+
+1. First, create a Roc Sender Virtual Audio Device, using these [instructions (roc-vad - Creating Sender)](https://github.com/roc-streaming/roc-vad?tab=readme-ov-file#creating-sender)
+```sh
+roc-vad device add sender
+```
+2. Then, connect it to the container or other Roc Receiver, with this command in Terminal :
+```sh
+roc-vad device connect <number of created Sender device, e.g. 1> \
+   --source rtp+rs8m://<Roc Receiver IP Address or Hostname>:10001 \
+   --repair rs8m://<Roc Receiver IP Address or Hostname>:10002 \
+   --control rtcp://<Roc Receiver IP Address or Hostname>:10003
+```
+
+When everything fails, first remove the Sender device again using:
+```sh
+roc-vad device del <number of created Sender device, e.g. 1>
+```
+and then create a new one.
 
 # Running PulseAudio as a Windows service and use it in WSL 2
 
 The built-in _WSLg PulseAudio_ might be unstable or giving glitchy sound, in that case it is recommended to install a proper PulseAudio server on Windows and repoint WSL 2 to that service rather than the built-in WSLg one.
 
-1. Install PulseAudio for Windows: downloaded the installer from here https://pgaskin.net/pulseaudio-win32 or follow this guide to get it installed as a service through manual steps: https://www.linuxuprising.com/2021/03/how-to-get-sound-pulseaudio-to-work-on.html
+1. Install PulseAudio for Windows: downloaded the installer from [here](https://pgaskin.net/pulseaudio-win32) or follow this guide to get it installed as a service through [manual steps](https://www.linuxuprising.com/2021/03/how-to-get-sound-pulseaudio-to-work-on.html)
 Make sure that the _default.pa_ or _config.pa_ file or what ever default configuration file only has these lines:
 ```
 load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;172.16.0.0/12
@@ -102,11 +126,11 @@ pacat < /dev/urandom
 
 1. Set up receiver
 ```sh
-roc-send -vv -s rtp+rs8m://127.0.0.1:10010 -r rs8m://127.0.0.1:10011 -i file:CantinaBand60.wav
+roc-send -vv -s rtp+rs8m://127.0.0.1:10001 -r rs8m://127.0.0.1:10002 -c rtcp://127.0.0.1:10003 -i file:CantinaBand60.wav
 ```
 2. Set up sender
 ```sh
-roc-recv -vv -s rtp+rs8m://0.0.0.0:10010 -r rs8m://0.0.0.0:10011 -o pulse://@DEFAULT_SINK@
+roc-recv -vv -s rtp+rs8m://0.0.0.0:10001 -r rs8m://0.0.0.0:10002 -c rtcp://0.0.0.0:10003 -o pulse://@DEFAULT_SINK@
 ```
 
 # Links
