@@ -14,62 +14,66 @@ RUN yes | apt-get install meson
 RUN yes | apt-get install ninja-build
 RUN yes | apt-get install libtdb-dev check
 RUN yes | apt-get install doxygen
+# Create Work Directory
+RUN mkdir /build
 # Build PulseAudio
-RUN wget https://freedesktop.org/software/pulseaudio/releases/pulseaudio-15.99.1.tar.gz
-RUN tar -xzvf pulseaudio-15.99.1.tar.gz
-RUN rm pulseaudio-15.99.1.tar.gz
-RUN cd pulseaudio-15.99.1 && meson setup build
-RUN cd pulseaudio-15.99.1 && ninja -C build
-RUN cd pulseaudio-15.99.1 && ninja -C build install
-RUN cd pulseaudio-15.99.1 && ldconfig
-# Build Libtool
-RUN wget https://gnu.askapache.com/libtool/libtool-2.4.7.tar.gz
-RUN tar -xzvf libtool-2.4.7.tar.gz
-RUN rm libtool-2.4.7.tar.gz
-RUN cd libtool-2.4.7 && ./configure --disable-static
-RUN cd libtool-2.4.7 && make
-RUN cd libtool-2.4.7 && make install
+WORKDIR /build
+ENV PULSE_VERSION=17.0
+RUN git clone https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git
+WORKDIR /build/pulseaudio
+RUN git checkout tags/v$PULSE_VERSION
+RUN meson setup build
+RUN ninja -C build && ninja -C build install
+RUN ldconfig
 # Build ROC Toolkit
+WORKDIR /build
+ENV ROCTOOLKIT_VERSION=0.4.0
 RUN git clone https://github.com/roc-streaming/roc-toolkit.git
-RUN cd roc-toolkit && scons -Q --build-3rdparty=openfec
-RUN cd roc-toolkit && scons -Q --build-3rdparty=openfec install
+WORKDIR /build/roc-toolkit
+RUN git checkout tags/v$ROCTOOLKIT_VERSION
+RUN scons -Q --build-3rdparty=openfec && scons -Q --build-3rdparty=openfec install
 # Build ROC Pulse
+WORKDIR /build
+ENV ROCPULSE_VERSION=0.0.7
 RUN git clone https://github.com/roc-streaming/roc-pulse.git
-RUN cd roc-pulse && mkdir build && cd build && mkdir x86_64-linux-gnu
-RUN sed -i "1i include(ExternalProject)" "/roc-pulse/cmake/setup_pulseaudio.cmake"
-RUN cd roc-pulse/build/x86_64-linux-gnu && cmake ../.. \
+WORKDIR /build/roc-pulse
+RUN git checkout tags/v$ROCPULSE_VERSION
+RUN mkdir build && cd build && mkdir x86_64-linux-gnu
+RUN sed -i "1i include(ExternalProject)" "cmake/setup_pulseaudio.cmake"
+WORKDIR /build/roc-pulse/build/x86_64-linux-gnu
+RUN cmake ../.. \
  -DDOWNLOAD_ROC=OFF \
  -DDOWNLOAD_PULSEAUDIO=OFF \
  -DDOWNLOAD_LIBTOOL=OFF \
- -DPULSEAUDIO_DIR=/pulseaudio-15.99.1 \
- -DPULSEAUDIO_VERSION=15.99.1 \
+ -DPULSEAUDIO_DIR=/build/pulseaudio \
+ -DPULSEAUDIO_VERSION=$PULSE_VERSION \
  -DROC_INCLUDE_DIR=/usr/include/roc \
- -DROC_LIB_DIR=/roc-toolkit/bin/x86_64-pc-linux-gnu \
- -DLIBTOOL_VERSION=2.4.7 \
- -DLIBTOOL_DIR=/libtool-2.4.7
-RUN cd roc-pulse/build/x86_64-linux-gnu && make VERBOSE=1
-RUN cd roc-pulse/build/x86_64-linux-gnu && /usr/bin/cc -fPIC -O3 -DNDEBUG  -pthread -lstdc++ -shared -Wl,-soname,module-roc-sink-input.so -o /roc-pulse/bin/module-roc-sink-input.so "CMakeFiles/module-roc-sink-input.dir/src/module-roc-sink-input.c.o" CMakeFiles/rocpulse_helpers.dir/src/rocpulse_helpers.c.o   -L/roc-toolkit/bin/x86_64-pc-linux-gnu,/usr/local/lib/x86_64-linux-gnu/pulseaudio -Wl,-rpath,/roc-toolkit/bin/x86_64-pc-linux-gnu -lroc -lpulse -L/usr/local/lib/x86_64-linux-gnu/pulseaudio/ -lpulsecore-15.99
-RUN cd roc-pulse/build/x86_64-linux-gnu && /usr/bin/cc -fPIC -O3 -DNDEBUG  -pthread -lstdc++ -shared -Wl,-soname,module-roc-sink.so -o /roc-pulse/bin/module-roc-sink.so "CMakeFiles/module-roc-sink.dir/src/module-roc-sink.c.o" CMakeFiles/rocpulse_helpers.dir/src/rocpulse_helpers.c.o   -L/roc-toolkit/bin/x86_64-pc-linux-gnu  -Wl,-rpath,/roc-toolkit/bin/x86_64-pc-linux-gnu -lroc -lpulse -L/usr/local/lib/x86_64-linux-gnu/pulseaudio/ -lpulsecore-15.99
-RUN cd roc-pulse/build/x86_64-linux-gnu && make install
+ -DROC_LIB_DIR=/usr/lib/x86_64-linux-gnu
+RUN make VERBOSE=1 && make install
 # Add ROC input sink to pulseaudio
-RUN cp /usr/local/lib/pulse-15.99.1/modules/module-roc-sink-input.so /usr/local/lib/x86_64-linux-gnu/pulseaudio/modules
-RUN cp /usr/local/lib/pulse-15.99.1/modules/module-roc-sink.so /usr/local/lib/x86_64-linux-gnu/pulseaudio/modules
-ENV LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu/pulseaudio
+RUN cp /usr/local/lib/pulse-$PULSE_VERSION/modules/module-roc-sink-input.so /usr/local/lib/x86_64-linux-gnu/pulseaudio/modules
+RUN cp /usr/local/lib/pulse-$PULSE_VERSION/modules/module-roc-sink.so /usr/local/lib/x86_64-linux-gnu/pulseaudio/modules
+#ENV LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu/pulseaudio
 RUN ldconfig
 # Clean-up source
-# RUN rm -Rf pulseaudio-15.99.1
-# RUN rm -Rf libtool-2.4.7
+# RUN rm -Rf pulseaudio
 # RUN rm -Rf roc-toolkit
 # RUN rm -Rf roc-pulse
+# Set-up Pulse Audio User
+RUN useradd pulse
+RUN mkdir /home/pulse
+WORKDIR /home/pulse
+RUN chgrp pulse .
+RUN chmod g+rw .
 # Setup PulseAudio start up script
-RUN mkdir /run/pulse
-RUN echo "#!/bin/sh" > /run/pulse/launch.sh
-RUN echo "echo \"load-module module-tunnel-sink sink_name=Remote server=\$PULSE_SERVER\" >> /run/pulse/config.pa" >> /run/pulse/launch.sh
-RUN echo "echo \"load-module module-roc-sink-input local_ip=0.0.0.0\" >> /run/pulse/config.pa" >> /run/pulse/launch.sh
-RUN echo "rm -Rf /tmp/pulse-*" >> /run/pulse/launch.sh
-RUN echo "/usr/local/bin/pulseaudio -v --exit-idle-time=-1 -F /run/pulse/config.pa --exit-idle-time=-1" >> /run/pulse/launch.sh
-RUN chmod +x "/run/pulse/launch.sh"
+RUN echo "#!/bin/sh" > launch.sh
+RUN echo "echo \"load-module module-tunnel-sink sink_name=Remote server=\$PULSE_SERVER\" >> /home/pulse/config.pa" >> launch.sh
+RUN echo "echo \"load-module module-roc-sink-input local_ip=0.0.0.0\" >> /home/pulse/config.pa" >> launch.sh
+RUN echo "rm -Rf /tmp/pulse-*" >> launch.sh
+RUN echo "/usr/local/bin/pulseaudio -v --exit-idle-time=-1 -F /home/pulse/config.pa --exit-idle-time=-1" >> launch.sh
+RUN chmod g+x launch.sh
 # Start PulseAudio
-CMD ["/run/pulse/launch.sh"]
+USER pulse
+CMD ["/home/pulse/launch.sh"]
 #CMD ["/bin/bash"]
 #CMD ["tail", "-f", "/dev/null"]
