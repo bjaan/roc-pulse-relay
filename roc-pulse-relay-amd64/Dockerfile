@@ -67,7 +67,7 @@ RUN echo "#!/bin/sh" > /run/pulse/launch.sh
 RUN echo "echo \"load-module module-tunnel-sink sink_name=Remote server=\$PULSE_SERVER\" >> /run/pulse/config.pa" >> /run/pulse/launch.sh
 RUN echo "echo \"load-module module-roc-sink-input local_ip=0.0.0.0\" >> /run/pulse/config.pa" >> /run/pulse/launch.sh
 RUN echo "rm -Rf /tmp/pulse-*" >> /run/pulse/launch.sh
-RUN echo "/usr/local/bin/pulseaudio -vvv --exit-idle-time=-1 -F /run/pulse/config.pa --exit-idle-time=-1" >> /run/pulse/launch.sh
+RUN echo "/usr/local/bin/pulseaudio -v --exit-idle-time=-1 -F /run/pulse/config.pa --exit-idle-time=-1" >> /run/pulse/launch.sh
 RUN chmod +x "/run/pulse/launch.sh"
 # Start PulseAudio
 CMD ["/run/pulse/launch.sh"]
