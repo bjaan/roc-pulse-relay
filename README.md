@@ -1,5 +1,5 @@
 # Roc Toolkit Receiver to PulseAudio relay
-Service that streams real-time audio from a Roc Sender to a PulseAudio server.
+Service that streams real-time audio from a Roc Toolkit Sender to a PulseAudio server.
 
 ![roc-pulse-relay overview](https://github.com/bjaan/roc-pulse-relay/blob/main/main.png?raw=true)
 
@@ -11,17 +11,19 @@ Or, use this service when you've set-up a Virtual Speakers as a Roc Virtual Audi
 
 The PulseAudio service can be run on a Raspberry Pi, another Linux, or a Windows PC as a Windows Service, for Roc-Steady Sound!
 
-Basically, all it is doing is running this command in a Docker container that contains its own PulseAudio server that forwards it your PulseAudio server
+Basically, all it is doing is running the equivalent of the following command in a Docker container, that contains its own PulseAudio server with Roc Toolkit PulseAudio Sink Input module (audio receive plug-in), that forwards it your PulseAudio server
 ```sh
 roc-recv -vv -s rtp+rs8m://0.0.0.0:10001 -r rs8m://0.0.0.0:10002 -c rtcp://0.0.0.0:10003 -o pulse://@DEFAULT_SINK@
 ```
+
+The container will listen at UDP-port 10001, UDP-port 10002, and UDP-port 10003 for a Roc Toolkit Sender to connect to.
 # Installation
 
 These assume that you already have the following things configured on your (host) machine:
 * PulseAudio server running and working audio on your host, test with the _pacat < /dev/urandom_ command if that is working, it should let you hear static over your speakers.
 * Docker installed on the same machine with PulseAudio installed, either under WSL 2 on Windows or directly on Linux.
 
-For the example use, mentioned above, to have working Virtual Speakers working on macOS, the _Roc Virtual Audio Device for macOS_ device set-up in macOS - ready to connect, see below for [instructions](#-Installation-of-the-Roc-Virtual-Audio-Device-for-macOS)
+For the example use, mentioned above, to have working Virtual Speakers working on macOS, the _Roc Virtual Audio Device for macOS_ device set-up in macOS - ready to connect, see below for [instructions](#installation-of-the-roc-virtual-audio-device-for-macos)
 
 And of course, some knowledge how to work with the terminal, GitHub repositories, and Docker.
 
@@ -124,13 +126,14 @@ pacat < /dev/urandom
 
 # Testing Roc Framework
 
-1. Set up receiver
-```sh
-roc-send -vv -s rtp+rs8m://127.0.0.1:10001 -r rs8m://127.0.0.1:10002 -c rtcp://127.0.0.1:10003 -i file:CantinaBand60.wav
-```
-2. Set up sender
+1. Set up receiver, which forwards received sound to the PulseAudio server, defined in the _$PULSE_SERVER_ environment variable.
 ```sh
 roc-recv -vv -s rtp+rs8m://0.0.0.0:10001 -r rs8m://0.0.0.0:10002 -c rtcp://0.0.0.0:10003 -o pulse://@DEFAULT_SINK@
+```
+
+2. Set up sender, which plays the digital audio from the .wav-file to the receiver at _127.0.0.1_ (local IP-address)
+```sh
+roc-send -vv -s rtp+rs8m://127.0.0.1:10001 -r rs8m://127.0.0.1:10002 -c rtcp://127.0.0.1:10003 -i file:CantinaBand60.wav
 ```
 
 # Links
